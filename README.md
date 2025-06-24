@@ -1,52 +1,50 @@
+# 🧠 Papers_QA: Medical Paper Question Answering System
 
-
-# 🧠 Papers\_QA: Medical Paper Question Answering System
-
-**Papers\_QA** is an end-to-end question answering pipeline tailored for extracting insights from a corpus of medical research papers in reproductive medicine.
+**Papers_QA** is an end-to-end question answering pipeline designed to extract insights from a corpus of medical research papers, with a focus on reproductive medicine.
 
 This project combines:
 
-* 🧾 **Mistral-7B-Instruct** (4-bit quantized) for natural language answer generation
-* 🔍 **Sentence-BERT** with **FAISS** for dense retrieval
-* 🧪 **BLEU score** and retrieval accuracy for evaluation
+- 🧾 **Mistral-7B-Instruct** (4-bit quantized) for answer generation
+- 🔍 **Sentence-BERT** with **FAISS** for dense passage retrieval
+- 🧪 **BLEU score** and retrieval accuracy for evaluation
 
 ---
 
 ## 📁 Project Structure
 
-```
 📦 Papers_QA
-├── 1_qa_generation.ipynb         # QA pair generation from JSON papers
-├── 3_inference.ipynb             # Retrieval + QA inference and evaluation
-├── train_data(2).csv             # Training QA dataset
-├── medqa-training(1).ipynb       # Experimental training notebook
-├── README.md                     # Project overview
-├── LICENSE                       # MIT License
-```
+├── data/
+│ └── generated/
+│ └── train_data.csv # Generated QA dataset
+├── notebooks/
+│ ├── 1_qa_generation.ipynb # QA pair generation from JSON papers
+│ ├── 3_inference.ipynb # Retrieval + QA inference and evaluation
+│ └── medqa_training.ipynb # Experimental training notebook
+├── docs/
+│ └── MedQA_Documentation.pdf # Project report or documentation
+├── src/ # (To be filled with scripts)
+├── requirements.txt # Project dependencies
+├── LICENSE # MIT License
+└── README.md # Project overview
 
-> ⚠️ `2_mistral_training.ipynb` was removed for cleanup — training handled externally or in `medqa-training`.
 
 ---
 
 ## 💡 Workflow Overview
 
 1. **Question Generation**
-   Extract QA pairs from JSON-formatted medical papers using prompt engineering.
+   - Extract QA pairs from JSON-formatted medical papers using prompt engineering.
+   - _Notebook: `notebooks/1_qa_generation.ipynb`_
 
-   > Notebook: `1_qa_generation.ipynb`
-
-2. **Model Fine-tuning**
-   (Optional) Fine-tune Mistral-7B-Instruct on domain-specific QA data.
-
-   > Notebook: `medqa-training(1).ipynb`
+2. **Model Fine-tuning (Optional)**
+   - Fine-tune the Mistral-7B-Instruct model on domain-specific data.
+   - _Notebook: `notebooks/medqa_training.ipynb`_
 
 3. **Retrieval & Inference**
-
-   * Use Sentence-BERT embeddings + FAISS to retrieve relevant context
-   * Generate answers with Mistral
-   * Evaluate using BLEU and retrieval correctness
-
-   > Notebook: `3_inference.ipynb`
+   - Use Sentence-BERT to embed passages and FAISS for nearest neighbor search.
+   - Generate answers with Mistral based on retrieved contexts.
+   - Evaluate results with BLEU and retrieval correctness.
+   - _Notebook: `notebooks/3_inference.ipynb`_
 
 ---
 
@@ -55,22 +53,20 @@ This project combines:
 ```bash
 git clone https://github.com/Bechirdardouri/Papers_QA.git
 cd Papers_QA
-pip install -r requirements.txt  # (prepare this file manually if needed)
-```
+pip install -r requirements.txt
+jupyter notebook
 
-> For GPU-based inference with quantized models, use a runtime like **Kaggle**, **Colab**, or a local setup with CUDA.
+    ✅ For GPU inference with quantized models, use environments like Colab, Kaggle, or a local CUDA setup.
 
----
+📊 Data Notes
 
-## 📝 Notes
+    The training data (train_data.csv) is automatically generated using the QA generation notebook.
 
-* Dataset: 50 medical research papers in JSON, manually curated.
-* QA generation uses multiple prompt strategies for robustness.
-* Retrieval is evaluated based on whether the correct context is selected before answering.
+    The source corpus includes 50 manually curated JSON-format medical papers.
 
----
+    Prompt strategies are diversified to ensure robustness of generated QA pairs.
 
-## 📄 License
+📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
-
+This project is licensed under the MIT License.
+See the LICENSE file for full details.
