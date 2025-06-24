@@ -14,18 +14,18 @@ This project combines:
 
 📦 Papers_QA
 ├── data/
-│ └── generated/
-│ └── train_data.csv # Generated QA dataset
+│   └── generated/
+│       └── train_data.csv          # Automatically generated QA pairs
 ├── notebooks/
-│ ├── 1_qa_generation.ipynb # QA pair generation from JSON papers
-│ ├── 3_inference.ipynb # Retrieval + QA inference and evaluation
-│ └── medqa_training.ipynb # Experimental training notebook
+│   ├── 1_qa_generation.ipynb       # Generate QAs from medical papers
+│   ├── 3_inference.ipynb           # Retrieval + inference + BLEU evaluation
+│   └── medqa_training.ipynb        # Fine-tuning Mistral (optional)
 ├── docs/
-│ └── MedQA_Documentation.pdf # Project report or documentation
-├── src/ # (To be filled with scripts)
-├── requirements.txt # Project dependencies
-├── LICENSE # MIT License
-└── README.md # Project overview
+│   └── MedQA_Documentation.pdf     # Project overview/report
+├── src/                            # Placeholder for reusable code modules
+├── requirements.txt                # Project dependencies
+├── LICENSE                         # MIT License
+└── README.md                       # This file
 
 
 ---
