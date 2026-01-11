@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  papers-qa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: papers-qa
+    image: papers-qa:latest
+    restart: unless-stopped
+    
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - MODEL__GENERATION_DEVICE=cuda
+      - CUDA_VISIBLE_DEVICES=0
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    
+    ports:
+      - "8000:8000"  # For FastAPI server
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 16G
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  # Optional: Visualization with Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  prometheus_data:
+  grafana_data:
