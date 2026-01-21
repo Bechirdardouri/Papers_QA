@@ -93,9 +93,9 @@ class FAISSIndexer:
         Returns:
             faiss.Index: The created index.
         """
-        if self.index_type == "flat":
+        if self.index_type in ("flat", "faiss_flat"):
             return faiss.IndexFlatL2(self.embedding_dim)
-        elif self.index_type == "ivf":
+        elif self.index_type in ("ivf", "faiss_ivf"):
             quantizer = faiss.IndexFlatL2(self.embedding_dim)
             return faiss.IndexIVFFlat(quantizer, self.embedding_dim, 100)
         else:
@@ -144,7 +144,7 @@ class FAISSIndexer:
             if 0 <= idx < len(self.documents):
                 results.append(self.documents[int(idx)])
                 # Convert L2 distance to similarity (0-1 range)
-                scores.append(1.0 / (1.0 + distance))
+                scores.append(float(1.0 / (1.0 + distance)))
 
         return results, scores
 
@@ -155,7 +155,7 @@ class FAISSIndexer:
             path: Path to save index.
         """
         path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
 
         faiss.write_index(self.index, str(path / "index.faiss"))
 

@@ -16,9 +16,9 @@ logger = get_logger(__name__)
 
 # Download required NLTK data
 try:
-    nltk.data.find("tokenizers/punkt")
+    nltk.data.find("tokenizers/punkt_tab")
 except LookupError:
-    nltk.download("punkt", quiet=True)
+    nltk.download("punkt_tab", quiet=True)
 
 
 class QAEvaluator:
@@ -96,7 +96,8 @@ class QAEvaluator:
         hyp_embedding = self.embedding_model.encode(hypothesis)
 
         similarity = cosine_similarity([ref_embedding[0]], [hyp_embedding[0]])[0][0]
-        return float(similarity)
+        # Clamp to [0, 1] to handle floating point precision issues
+        return float(min(1.0, max(0.0, similarity)))
 
     def evaluate_answer(
         self,
