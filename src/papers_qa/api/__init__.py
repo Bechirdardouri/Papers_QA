@@ -5,15 +5,13 @@ enabling HTTP-based access to QA generation, retrieval, and evaluation.
 """
 
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from papers_qa.config import get_settings
-from papers_qa.data import DataLoader, DataProcessor
+from papers_qa.data import DataProcessor
 from papers_qa.evaluation import QAEvaluator
 from papers_qa.logging_config import configure_logging, get_logger
 from papers_qa.retrieval import RetrieverPipeline
@@ -203,7 +201,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Query failed: {str(e)}",
-            )
+            ) from e
 
     @app.post("/index", response_model=IndexResponse, tags=["Indexing"])
     async def index_documents(request: IndexRequest) -> IndexResponse:
@@ -215,9 +213,7 @@ def create_app() -> FastAPI:
             )
 
         try:
-            cleaned_docs = [
-                app_state.data_processor.clean_text(doc) for doc in request.documents
-            ]
+            cleaned_docs = [app_state.data_processor.clean_text(doc) for doc in request.documents]
             cleaned_docs = [doc for doc in cleaned_docs if doc]
 
             if not cleaned_docs:
@@ -241,7 +237,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Indexing failed: {str(e)}",
-            )
+            ) from e
 
     @app.post("/evaluate", response_model=EvaluateResponse, tags=["Evaluation"])
     async def evaluate_answer(request: EvaluateRequest) -> EvaluateResponse:
@@ -254,7 +250,7 @@ def create_app() -> FastAPI:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="Evaluator initialization failed",
-                )
+                ) from e
 
         try:
             metrics = app_state.evaluator.evaluate_answer(
@@ -275,7 +271,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Evaluation failed: {str(e)}",
-            )
+            ) from e
 
     @app.delete("/index", tags=["Indexing"])
     async def clear_index() -> dict[str, str]:
@@ -295,7 +291,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to clear index: {str(e)}",
-            )
+            ) from e
 
     return app
 

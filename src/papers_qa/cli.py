@@ -165,7 +165,7 @@ Examples:
     )
 
     # Version command
-    version_parser = subparsers.add_parser("version", help="Show version information")
+    subparsers.add_parser("version", help="Show version information")
 
     return parser
 
@@ -195,9 +195,7 @@ def generate_qa(args: argparse.Namespace) -> int:
         # Extract text from documents
         processor = DataProcessor()
         texts = [
-            processor.extract_text_from_doc(doc)
-            if isinstance(doc, dict)
-            else str(doc)
+            processor.extract_text_from_doc(doc) if isinstance(doc, dict) else str(doc)
             for doc in documents
         ]
 
@@ -251,10 +249,7 @@ def index_documents(args: argparse.Namespace) -> int:
         retriever = RetrieverPipeline(model_name=args.model)
 
         # Index documents
-        doc_texts = [
-            d if isinstance(d, str) else str(d)
-            for d in documents
-        ]
+        doc_texts = [d if isinstance(d, str) else str(d) for d in documents]
         retriever.index_documents(doc_texts)
 
         # Save index
@@ -327,9 +322,7 @@ def evaluate_system(args: argparse.Namespace) -> int:
         evaluator = QAEvaluator()
         metrics_list = []
 
-        for ref_ans, pred_ans in zip(
-            refs_df.iloc[:, 0], preds_df.iloc[:, 0], strict=False
-        ):
+        for ref_ans, pred_ans in zip(refs_df.iloc[:, 0], preds_df.iloc[:, 0], strict=False):
             metrics = evaluator.evaluate_answer(str(ref_ans), str(pred_ans))
             metrics_list.append(metrics)
 

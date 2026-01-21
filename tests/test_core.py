@@ -27,6 +27,7 @@ class TestConfig:
         """Test that required directories are created."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
+
             tmppath = Path(tmpdir)
             os.environ["DATA__INPUT_DIR"] = str(tmppath / "input")
             os.environ["DATA__OUTPUT_DIR"] = str(tmppath / "output")

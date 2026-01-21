@@ -152,9 +152,7 @@ class EvaluationConfig(BaseSettings):
     compute_semantic_similarity: bool = Field(
         default=True, description="Compute semantic similarity"
     )
-    compute_retrieval_accuracy: bool = Field(
-        default=True, description="Compute retrieval accuracy"
-    )
+    compute_retrieval_accuracy: bool = Field(default=True, description="Compute retrieval accuracy")
 
 
 class Settings(BaseSettings):

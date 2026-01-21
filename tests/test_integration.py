@@ -3,9 +3,6 @@
 These tests verify that different components work together correctly.
 """
 
-import tempfile
-from pathlib import Path
-
 import pytest
 
 from papers_qa import (
@@ -27,7 +24,11 @@ class TestEndToEndPipeline:
         settings = Settings(
             environment="development",
             debug=False,
-            data={"input_dir": temp_dir / "input", "output_dir": temp_dir / "output", "cache_dir": temp_dir / "cache"},
+            data={
+                "input_dir": temp_dir / "input",
+                "output_dir": temp_dir / "output",
+                "cache_dir": temp_dir / "cache",
+            },
         )
         set_settings(settings)
         return settings

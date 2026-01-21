@@ -45,9 +45,7 @@ def configure_logging() -> None:
         settings.log_file.parent.mkdir(parents=True, exist_ok=True)
         file_handler = logging.FileHandler(settings.log_file)
         file_handler.setLevel(log_level)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(formatter)
         handlers.append(file_handler)
 

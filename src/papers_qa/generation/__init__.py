@@ -127,9 +127,7 @@ Generate the QA pairs:"""
 
             qa_pairs = self.generate_qa_pairs(doc)
 
-            location = (
-                context_locations[idx] if context_locations else f"section_{idx}"
-            )
+            location = context_locations[idx] if context_locations else f"section_{idx}"
 
             for qa_pair in qa_pairs:
                 record = {
@@ -179,9 +177,7 @@ class BatchQAGenerator:
         for i in range(0, len(passages), self.batch_size):
             batch = passages[i : i + self.batch_size]
             batch_locations = (
-                context_locations[i : i + self.batch_size]
-                if context_locations
-                else None
+                context_locations[i : i + self.batch_size] if context_locations else None
             )
 
             logger.info(
