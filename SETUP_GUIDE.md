@@ -1,82 +1,43 @@
-# Papers QA: Medical Paper Question Answering System
+# Papers QA Setup Guide
 
-<div align="center">
+Complete setup, configuration, and API reference for the Papers QA system.
 
-![Papers QA](https://img.shields.io/badge/Papers%20QA-v1.0.0-blue)
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+## Table of Contents
 
-A **production-grade**, state-of-the-art system for automatic question-answer pair generation, retrieval, and evaluation from medical research papers.
-
-[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [API](#-api) • [Contributing](#-contributing)
-
-</div>
-
----
-
-## Overview
-
-**Papers QA** is an end-to-end AI-powered pipeline designed to automate the extraction of meaningful insights from medical research papers. The system combines:
-
-- **Advanced NLP Models**: Mistral-7B-Instruct, BAAI/bge-small-en-v1.5 embeddings
-- **Efficient Retrieval**: FAISS-based vector search with semantic similarity
-- **Comprehensive Evaluation**: BLEU, ROUGE, semantic similarity, and retrieval metrics
-- **Production Architecture**: Modular design with comprehensive logging and configuration management
-
-### Key Benefits
-
-✅ **Fully Automated**: Generate QA pairs without manual annotation  
-✅ **Scalable**: Handle thousands of papers efficiently  
-✅ **Modular**: Use individual components independently  
-✅ **Well-Tested**: Comprehensive unit and integration tests  
-✅ **Production-Ready**: Type hints, error handling, structured logging  
-✅ **Research-Grade**: State-of-the-art models and evaluation metrics
+1. [Prerequisites](#prerequisites)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Architecture](#architecture)
+5. [API Reference](#api-reference)
+6. [Advanced Usage](#advanced-usage)
+7. [Deployment](#deployment)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Features
+## Prerequisites
 
-### 🧾 Core Capabilities
+### System Requirements
 
-- **QA Generation**: Automatically generate high-quality question-answer pairs from medical texts
-- **Semantic Retrieval**: Retrieve relevant passages using embeddings and FAISS indexing
-- **Answer Generation**: Generate contextual answers using Mistral-7B-Instruct
-- **Evaluation Metrics**: BLEU, ROUGE-1, ROUGE-L, semantic similarity, retrieval accuracy
-- **Batch Processing**: Efficient batch processing with configurable batch sizes
-- **Caching**: Intelligent caching of embeddings and indices for faster processing
+- Python 3.10 or higher
+- CUDA 11.8+ (recommended for GPU acceleration)
+- 16GB+ RAM (8GB minimum for CPU-only mode)
+- 10GB+ disk space for models and data
 
-### 🏗️ Architecture Highlights
+### Hardware Recommendations
 
-- **Modular Design**: Separate modules for data, retrieval, LLM, generation, evaluation
-- **Configuration Management**: Pydantic v2 configuration with environment variable support
-- **Structured Logging**: Rich, structured logs using `structlog`
-- **Error Handling**: Comprehensive error handling with retries and graceful degradation
-- **Type Safety**: Full type hints throughout codebase
-
-### 📊 Supported Models
-
-**Embedding Models** (Hugging Face):
-- `BAAI/bge-small-en-v1.5` (default, 384-dim, 33M parameters)
-- `sentence-transformers/all-MiniLM-L6-v2`
-- `sentence-transformers/all-mpnet-base-v2`
-
-**Generation Models**:
-- `mistralai/Mistral-7B-Instruct-v0.1`
-- `meta-llama/Llama-2-7b-chat-hf`
-- `meta-llama/Llama-2-13b-chat-hf`
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| CPU | 4 cores | 8+ cores |
+| RAM | 8GB | 16GB+ |
+| GPU | None | NVIDIA RTX 3080+ |
+| Storage | 10GB | 50GB+ SSD |
 
 ---
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.10 or higher
-- CUDA 11.8+ (recommended for GPU)
-- 16GB+ RAM (8GB minimum)
-
-### Option 1: From Source
+### Option 1: From Source (Recommended for Development)
 
 ```bash
 # Clone repository
@@ -103,97 +64,109 @@ pip install papers-qa
 ### Option 3: Docker
 
 ```bash
+# Build image
 docker build -t papers-qa .
+
+# Run with GPU
 docker run --gpus all -it papers-qa
+
+# Run CPU-only
+docker run -it papers-qa
+```
+
+### Verify Installation
+
+```python
+from papers_qa import __version__, get_settings
+print(f"Papers QA v{__version__}")
+settings = get_settings()
+print(f"Environment: {settings.environment}")
 ```
 
 ---
 
-## Quick Start
+## Configuration
 
-### 1. Basic Usage
+### Environment Variables
 
-```python
-from papers_qa import (
-    DataLoader,
-    RetrieverPipeline,
-    QAGenerator,
-    QAEvaluator,
-    configure_logging,
-)
-
-# Setup
-configure_logging()
-
-# Load documents
-loader = DataLoader()
-documents = loader.load_documents("data/raw")
-
-# Create retriever and index
-retriever = RetrieverPipeline()
-retriever.index_documents(documents)
-
-# Generate QA pairs
-generator = QAGenerator()
-qa_pairs = generator.generate_dataset(documents)
-
-# Evaluate
-evaluator = QAEvaluator()
-metrics = evaluator.evaluate_answer(reference, prediction)
-print(f"BLEU: {metrics['bleu']:.4f}")
-print(f"Semantic Similarity: {metrics['semantic_similarity']:.4f}")
-```
-
-### 2. CLI Commands
+Configuration is managed through environment variables with Pydantic validation. Create a `.env` file in the project root:
 
 ```bash
-# Generate QA pairs
-papers-qa generate \
-  --input data/raw \
-  --output data/generated/qa_pairs.csv \
-  --batch-size 4
-
-# Create vector index
-papers-qa index \
-  --documents data/raw/papers.json \
-  --output data/cache/index
-
-# Query the system
-papers-qa query \
-  --index data/cache/index \
-  --question "What is adenomyosis?" \
-  --top-k 5
-
-# Evaluate performance
-papers-qa evaluate \
-  --references data/reference_answers.csv \
-  --predictions data/predicted_answers.csv \
-  --output results/metrics.csv
+cp .env.example .env
 ```
 
-### 3. Configuration
+### Configuration Reference
 
-Create a `.env` file or use environment variables:
+#### General Settings
 
-```bash
-# Model configuration
-MODEL__EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
-MODEL__GENERATION_MODEL=mistralai/Mistral-7B-Instruct-v0.1
-MODEL__ENABLE_QUANTIZATION=true
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `ENVIRONMENT` | string | production | Execution environment (development, staging, production) |
+| `DEBUG` | bool | false | Enable debug mode (disabled in production) |
+| `SEED` | int | 42 | Random seed for reproducibility |
+| `LOG_LEVEL` | string | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `LOG_FILE` | path | None | Log file path (None for console only) |
 
-# Data configuration
-DATA__INPUT_DIR=./data/raw
-DATA__OUTPUT_DIR=./data/generated
-DATA__CACHE_DIR=./data/cache
+#### Model Configuration
 
-# Generation configuration
-GENERATION__BATCH_SIZE=4
-GENERATION__NUM_QUESTIONS_PER_PASSAGE=3
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `MODEL__EMBEDDING_MODEL` | string | BAAI/bge-small-en-v1.5 | Embedding model identifier |
+| `MODEL__EMBEDDING_DEVICE` | string | cpu | Device for embeddings (cpu, cuda, mps) |
+| `MODEL__EMBEDDING_BATCH_SIZE` | int | 32 | Batch size for embedding generation |
+| `MODEL__GENERATION_MODEL` | string | mistralai/Mistral-7B-Instruct-v0.1 | LLM model identifier |
+| `MODEL__GENERATION_DEVICE` | string | cuda | Device for generation |
+| `MODEL__GENERATION_MAX_LENGTH` | int | 512 | Maximum generation length |
+| `MODEL__GENERATION_TEMPERATURE` | float | 0.7 | Sampling temperature |
+| `MODEL__GENERATION_TOP_P` | float | 0.95 | Nucleus sampling parameter |
+| `MODEL__ENABLE_QUANTIZATION` | bool | true | Enable 4-bit quantization |
 
-# General
-ENVIRONMENT=production
-LOG_LEVEL=INFO
-```
+#### Data Configuration
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `DATA__INPUT_DIR` | path | ./data/raw | Input documents directory |
+| `DATA__OUTPUT_DIR` | path | ./data/generated | Output directory for results |
+| `DATA__CACHE_DIR` | path | ./data/cache | Cache directory for indices |
+| `DATA__MAX_DOC_LENGTH` | int | 4096 | Maximum document length |
+| `DATA__CHUNK_SIZE` | int | 512 | Text chunk size |
+| `DATA__CHUNK_OVERLAP` | int | 50 | Overlap between chunks |
+
+#### Retrieval Configuration
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `RETRIEVAL__INDEX_TYPE` | string | faiss_flat | Index type (faiss_flat, faiss_ivf) |
+| `RETRIEVAL__NUM_NEIGHBORS` | int | 5 | Number of neighbors to retrieve |
+| `RETRIEVAL__SIMILARITY_THRESHOLD` | float | 0.5 | Minimum similarity threshold |
+| `RETRIEVAL__USE_CACHE` | bool | true | Enable embedding caching |
+
+#### Generation Configuration
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `GENERATION__BATCH_SIZE` | int | 4 | Batch size for QA generation |
+| `GENERATION__NUM_QUESTIONS_PER_PASSAGE` | int | 3 | Questions per passage |
+| `GENERATION__MAX_RETRIES` | int | 3 | Maximum retry attempts |
+| `GENERATION__TIMEOUT` | int | 30 | API timeout in seconds |
+
+### Supported Models
+
+#### Embedding Models
+
+| Model | Dimensions | Parameters | Notes |
+|-------|------------|------------|-------|
+| BAAI/bge-small-en-v1.5 | 384 | 33M | Default, good balance |
+| sentence-transformers/all-MiniLM-L6-v2 | 384 | 22M | Fast, lightweight |
+| sentence-transformers/all-mpnet-base-v2 | 768 | 109M | Higher quality |
+
+#### Generation Models
+
+| Model | Parameters | Notes |
+|-------|------------|-------|
+| mistralai/Mistral-7B-Instruct-v0.1 | 7B | Default, efficient |
+| meta-llama/Llama-2-7b-chat-hf | 7B | Requires license |
+| meta-llama/Llama-2-13b-chat-hf | 13B | Higher quality |
 
 ---
 
@@ -202,52 +175,57 @@ LOG_LEVEL=INFO
 ### System Design
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    INPUT DOCUMENTS                       │
-└─────────────────────┬───────────────────────────────────┘
-                      ↓
-        ┌─────────────────────────────┐
-        │   Data Loading & Processing  │
-        │  (DataLoader, DataProcessor) │
-        └──────────────┬────────────────┘
-                       ↓
-        ┌──────────────────────────────┐
-        │  Embedding & Indexing        │
-        │  (EmbeddingModel, FAISSIndex)│
-        └──────────────┬───────────────┘
-                       ↓
-      ┌────────────────────────────────────┐
-      │  QA Generation Pipeline             │
-      │  (QAGenerator, InferencePipeline)   │
-      └──────────────┬─────────────────────┘
-                     ↓
-      ┌────────────────────────────────────┐
-      │  Retrieval & Answer Generation      │
-      │  (RetrieverPipeline, LLMModel)      │
-      └──────────────┬─────────────────────┘
-                     ↓
-      ┌────────────────────────────────────┐
-      │  Evaluation Metrics                 │
-      │  (QAEvaluator, BatchEvaluator)      │
-      └──────────────┬─────────────────────┘
-                     ↓
-         ┌──────────────────────────┐
-         │   OUTPUT & RESULTS        │
-         └──────────────────────────┘
+Input Documents
+       |
+       v
++-------------------+
+| Data Loading      |  DataLoader, DataProcessor
++-------------------+
+       |
+       v
++-------------------+
+| Embedding         |  EmbeddingModel, FAISSIndexer
++-------------------+
+       |
+       v
++-------------------+
+| QA Generation     |  QAGenerator, InferencePipeline
++-------------------+
+       |
+       v
++-------------------+
+| Retrieval         |  RetrieverPipeline
++-------------------+
+       |
+       v
++-------------------+
+| Evaluation        |  QAEvaluator, BatchEvaluator
++-------------------+
+       |
+       v
+Output Results
 ```
 
 ### Module Structure
 
 ```
-papers_qa/
-├── config.py              # Configuration management
-├── logging_config.py      # Logging setup
-├── cli.py                 # Command-line interface
-├── data/                  # Data loading & processing
-├── retrieval/             # Embedding & vector search
-├── llm/                   # LLM inference
-├── generation/            # QA generation
-└── evaluation/            # Metrics & evaluation
+src/papers_qa/
+├── __init__.py           # Public API exports
+├── config.py             # Configuration management
+├── logging_config.py     # Structured logging
+├── cli.py                # Command-line interface
+├── api/                  # REST API module
+│   └── __init__.py
+├── data/                 # Data loading and processing
+│   └── __init__.py
+├── retrieval/            # Embedding and vector search
+│   └── __init__.py
+├── llm/                  # LLM inference
+│   └── __init__.py
+├── generation/           # QA pair generation
+│   └── __init__.py
+└── evaluation/           # Metrics and evaluation
+    └── __init__.py
 ```
 
 ---
@@ -260,8 +238,32 @@ papers_qa/
 from papers_qa import DataLoader
 
 loader = DataLoader()
+
+# Load documents from directory
 documents = loader.load_documents("path/to/documents")
+
+# Load QA dataset from CSV
 qa_data = loader.load_qa_dataset("path/to/qa.csv")
+```
+
+### DataProcessor
+
+```python
+from papers_qa import DataProcessor
+
+processor = DataProcessor()
+
+# Clean text
+cleaned = processor.clean_text("  messy   text  ")
+
+# Extract text from document
+text = processor.extract_text_from_doc({"title": "...", "body_text": [...]})
+
+# Split into chunks
+chunks = processor.split_text(text, chunk_size=512, overlap=50)
+
+# Validate QA pair
+is_valid = processor.validate_qa_pair(question, answer)
 ```
 
 ### RetrieverPipeline
@@ -270,6 +272,8 @@ qa_data = loader.load_qa_dataset("path/to/qa.csv")
 from papers_qa import RetrieverPipeline
 
 retriever = RetrieverPipeline(model_name="BAAI/bge-small-en-v1.5")
+
+# Index documents
 retriever.index_documents(documents)
 
 # Retrieve similar documents
@@ -277,7 +281,7 @@ results = retriever.retrieve("What is adenomyosis?", k=5)
 for doc, score in results:
     print(f"Score: {score:.4f}, Doc: {doc[:100]}...")
 
-# Save/load index
+# Save and load index
 retriever.save()
 retriever.load()
 ```
@@ -288,7 +292,11 @@ retriever.load()
 from papers_qa import QAGenerator
 
 generator = QAGenerator(model_name="mistralai/Mistral-7B-Instruct-v0.1")
+
+# Generate QA pairs from passage
 qa_pairs = generator.generate_qa_pairs(passage)
+
+# Generate dataset from multiple documents
 dataset = generator.generate_dataset(documents)
 ```
 
@@ -304,12 +312,14 @@ metrics = evaluator.evaluate_answer(
     reference="The answer is neural networks",
     hypothesis="Neural networks are deep learning models"
 )
+# Returns: bleu, rouge1_f1, rougeL_f1, semantic_similarity, overall_score
 
 # Evaluate retrieval
 retrieval_metrics = evaluator.evaluate_retrieval(
     retrieved_docs=["doc1", "doc2"],
     relevant_docs=["doc1", "doc3"]
 )
+# Returns: precision, recall, f1
 ```
 
 ### InferencePipeline
@@ -330,6 +340,20 @@ for chunk in pipeline.answer_question_streaming(question, context):
     print(chunk, end="", flush=True)
 ```
 
+### Batch Processing
+
+```python
+from papers_qa import BatchQAGenerator, BatchEvaluator
+
+# Batch QA generation
+batch_gen = BatchQAGenerator(batch_size=8)
+qa_results = batch_gen.generate_batch(documents)
+
+# Batch evaluation
+batch_eval = BatchEvaluator()
+metrics = batch_eval.evaluate_qa_pairs(references, predictions)
+```
+
 ---
 
 ## Advanced Usage
@@ -339,36 +363,20 @@ for chunk in pipeline.answer_question_streaming(question, context):
 ```python
 from papers_qa import Settings, set_settings
 
-# Create custom settings
 custom_settings = Settings(
     environment="production",
     log_level="DEBUG",
-    model__embedding_model="sentence-transformers/all-mpnet-base-v2",
-    model__generation_max_length=1024,
+    model={"embedding_model": "sentence-transformers/all-mpnet-base-v2"},
+    data={"chunk_size": 1024},
 )
 
-# Apply globally
 set_settings(custom_settings)
-```
-
-### Batch Processing
-
-```python
-from papers_qa import BatchQAGenerator, BatchEvaluator
-
-# Batch generation
-batch_gen = BatchQAGenerator(batch_size=8)
-qa_results = batch_gen.generate_batch(documents)
-
-# Batch evaluation
-batch_eval = BatchEvaluator()
-metrics = batch_eval.evaluate_qa_pairs(references, predictions)
 ```
 
 ### Performance Tracking
 
 ```python
-from papers_qa.logging_config import PerformanceTracker
+from papers_qa import PerformanceTracker
 
 tracker = PerformanceTracker()
 
@@ -381,71 +389,49 @@ summary = tracker.get_summary("qa_generation")
 print(f"Avg time: {summary['avg']:.2f}s")
 ```
 
----
+### REST API Integration
 
-## Performance Benchmarks
+```python
+# Start the API server
+from papers_qa.api import run_server
+run_server(host="0.0.0.0", port=8000)
 
-### Embedding Performance
-- **Model**: BAAI/bge-small-en-v1.5
-- **Throughput**: ~1,000 documents/min on GPU
-- **Memory**: ~2GB per 10K documents
-
-### Generation Performance
-- **Model**: Mistral-7B-Instruct (4-bit quantized)
-- **Throughput**: ~10 QA pairs/min
-- **Memory**: ~8GB
-
-### Retrieval Performance
-- **Index Type**: FAISS IVF
-- **Query Time**: ~10ms per query (10K docs)
-- **Index Size**: ~0.5MB per 1K documents
-
----
-
-## Testing
-
-### Run Tests
-
-```bash
-# All tests
-pytest tests/
-
-# With coverage
-pytest tests/ --cov=papers_qa --cov-report=html
-
-# Specific test
-pytest tests/test_core.py::TestConfig::test_settings_creation -v
+# Or via CLI
+# papers-qa serve --host 0.0.0.0 --port 8000
 ```
 
-### Performance Testing
-
-```bash
-# Run benchmarks
-python -m pytest tests/test_performance.py --benchmark
-
-# Profile code
-python -m cProfile -o profile.prof main.py
-pyprof2calltree -i profile.prof -o profile.kcachegrind
-```
+API endpoints:
+- `GET /health` - Health check
+- `POST /query` - Query documents
+- `POST /index` - Index documents
+- `DELETE /index` - Clear index
+- `POST /evaluate` - Evaluate answers
 
 ---
 
 ## Deployment
 
-### Docker
+### Docker Compose
 
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY src/ /app/src/
-ENV PYTHONPATH=/app/src
-
-ENTRYPOINT ["papers-qa"]
+```yaml
+version: '3.8'
+services:
+  papers-qa:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - ENVIRONMENT=production
+      - MODEL__GENERATION_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 ```
 
 ### Kubernetes
@@ -466,24 +452,9 @@ spec:
           limits:
             memory: "16Gi"
             nvidia.com/gpu: "1"
-```
-
-### FastAPI Server
-
-```python
-from fastapi import FastAPI
-from papers_qa import RetrieverPipeline, InferencePipeline
-
-app = FastAPI()
-retriever = RetrieverPipeline()
-pipeline = InferencePipeline()
-
-@app.post("/query")
-async def query(question: str):
-    docs = retriever.retrieve(question, k=3)
-    context = docs[0][0] if docs else ""
-    answer = pipeline.answer_question(question, context)
-    return {"question": question, "answer": answer}
+        env:
+        - name: ENVIRONMENT
+          value: "production"
 ```
 
 ---
@@ -493,98 +464,76 @@ async def query(question: str):
 ### CUDA Issues
 
 ```python
-# Force CPU
+# Force CPU mode
 from papers_qa import Settings, set_settings
+
 settings = Settings(
-    model__embedding_device="cpu",
-    model__generation_device="cpu"
+    model={
+        "embedding_device": "cpu",
+        "generation_device": "cpu"
+    }
 )
 set_settings(settings)
 ```
 
+Or via environment variables:
+
+```bash
+export MODEL__EMBEDDING_DEVICE=cpu
+export MODEL__GENERATION_DEVICE=cpu
+```
+
 ### Out of Memory
 
-```python
-# Reduce batch size and quantize
-settings = Settings(
-    model__embedding_batch_size=8,
-    model__enable_quantization=True,
-    generation__batch_size=2
-)
+Reduce batch sizes and enable quantization:
+
+```bash
+export MODEL__EMBEDDING_BATCH_SIZE=8
+export MODEL__ENABLE_QUANTIZATION=true
+export GENERATION__BATCH_SIZE=2
 ```
 
 ### Slow Inference
 
-```bash
-# Use quantized model
-export MODEL__ENABLE_QUANTIZATION=true
+Use smaller models:
 
-# Use smaller embedding model
+```bash
 export MODEL__EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+export MODEL__ENABLE_QUANTIZATION=true
 ```
 
----
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
+### Missing Dependencies
 
 ```bash
-git clone https://github.com/yourusername/papers-qa.git
-cd papers-qa
-pip install -e ".[dev]"
-pre-commit install
-pytest tests/
+# Reinstall all dependencies
+pip install -r requirements.txt --upgrade
+pip install -e ".[dev,api]"
+```
+
+### Index Loading Errors
+
+```bash
+# Clear cache and rebuild
+rm -rf data/cache/*
+papers-qa index --documents data/raw/papers.json --output data/cache/index
 ```
 
 ---
 
-## Citation
+## Performance Benchmarks
 
-If you use Papers QA in your research, please cite:
-
-```bibtex
-@software{papersqa2024,
-  title={Papers QA: Medical Paper Question Answering System},
-  author={Papers QA Team},
-  year={2024},
-  url={https://github.com/yourusername/papers-qa}
-}
-```
-
----
-
-## License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- [Hugging Face](https://huggingface.co/) for transformers and datasets
-- [BAAI](https://www.baai.ac.cn/) for BGE embeddings
-- [Meta](https://www.meta.com/) for Llama models
-- [Mistral AI](https://mistral.ai/) for Mistral models
-- [Facebook Research](https://research.facebook.com/) for FAISS
+| Operation | Hardware | Throughput | Memory |
+|-----------|----------|------------|--------|
+| Embedding (BGE-small) | RTX 3080 | ~1000 docs/min | ~2GB |
+| Embedding (BGE-small) | CPU | ~100 docs/min | ~1GB |
+| Generation (Mistral-7B) | RTX 3080 | ~10 QA/min | ~8GB |
+| Retrieval (10K docs) | Any | ~100 queries/sec | ~500MB |
 
 ---
 
 ## Support
 
-- 📖 [Documentation](https://papers-qa.readthedocs.io)
-- 🐛 [Issue Tracker](https://github.com/yourusername/papers-qa/issues)
-- 💬 [Discussions](https://github.com/yourusername/papers-qa/discussions)
-- 📧 [Email](mailto:support@papersqa.com)
-
----
-
-<div align="center">
-
-Made with ❤️ by Papers QA Team
-
-[⬆ Back to Top](#papers-qa-medical-paper-question-answering-system)
-
-</div>
+- Documentation: This guide and README.md
+- Issues: GitHub issue tracker
+- Discussions: GitHub discussions
+- Email: support@papersqa.com

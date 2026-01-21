@@ -1,4 +1,9 @@
-"""CLI for Papers QA system."""
+"""CLI for Papers QA system.
+
+This module provides a command-line interface for the Papers QA system,
+supporting QA generation, document indexing, querying, evaluation, and
+API server management.
+"""
 
 import argparse
 import sys
@@ -35,6 +40,7 @@ Examples:
   papers-qa index --documents data/generated/documents.json
   papers-qa query --index data/cache --question "What is adenomyosis?"
   papers-qa evaluate --references data/answers.json --predictions data/predictions.json
+  papers-qa serve --host 0.0.0.0 --port 8000
         """,
     )
 
@@ -137,6 +143,29 @@ Examples:
         type=Path,
         help="Output evaluation results",
     )
+
+    # Serve command (API server)
+    serve_parser = subparsers.add_parser("serve", help="Start the REST API server")
+    serve_parser.add_argument(
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        help="Host address to bind to (default: 0.0.0.0)",
+    )
+    serve_parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to listen on (default: 8000)",
+    )
+    serve_parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="Enable auto-reload for development",
+    )
+
+    # Version command
+    version_parser = subparsers.add_parser("version", help="Show version information")
 
     return parser
 
@@ -330,6 +359,56 @@ def evaluate_system(args: argparse.Namespace) -> int:
         return 1
 
 
+def serve_api(args: argparse.Namespace) -> int:
+    """Handle serve command to start the API server.
+
+    Args:
+        args: Parsed arguments.
+
+    Returns:
+        int: Exit code.
+    """
+    try:
+        logger.info(
+            "starting_api_server",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+        )
+
+        from papers_qa.api import run_server
+
+        run_server(host=args.host, port=args.port, reload=args.reload)
+        return 0
+
+    except ImportError as e:
+        logger.error(
+            "api_dependencies_missing",
+            error=str(e),
+            hint="Install API dependencies with: pip install papers-qa[api]",
+        )
+        print("Error: API dependencies not installed.")
+        print("Install with: pip install papers-qa[api]")
+        return 1
+
+    except Exception as e:
+        logger.error("api_server_failed", error=str(e), exc_info=True)
+        return 1
+
+
+def show_version() -> int:
+    """Display version information.
+
+    Returns:
+        int: Exit code.
+    """
+    from papers_qa import __version__
+
+    print(f"Papers QA v{__version__}")
+    print("Medical Paper Question Answering System")
+    return 0
+
+
 def main() -> int:
     """Main CLI entry point.
 
@@ -351,6 +430,10 @@ def main() -> int:
         return query_system(args)
     elif args.command == "evaluate":
         return evaluate_system(args)
+    elif args.command == "serve":
+        return serve_api(args)
+    elif args.command == "version":
+        return show_version()
     else:
         parser.print_help()
         return 1

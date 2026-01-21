@@ -203,4 +203,4 @@ papers_qa/
 - Open a [Discussion](https://github.com/yourusername/papers-qa/discussions)
 - Email: support@papersqa.com
 
-Thank you for contributing to Papers QA! 🎉
+Thank you for contributing to Papers QA.

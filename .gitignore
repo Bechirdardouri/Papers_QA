@@ -29,11 +29,10 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 
 # Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
-!notebooks/
+.ipynb_checkpoints/
 
 # IDEs
 .vscode/
@@ -42,9 +41,12 @@ venv.bak/
 *.swo
 *~
 .DS_Store
+
+# Environment files
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # Testing & Coverage
 .pytest_cache/
@@ -56,17 +58,20 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.ruff_cache/
 
 # Logs
 logs/
 *.log
 
-# Data (can be configured separately)
-data/raw/
-data/generated/
-data/cache/
-*.csv
-*.json
+# Data files (keep directory structure)
+data/raw/*
+data/generated/*
+data/cache/*
+!data/raw/.gitkeep
+!data/generated/.gitkeep
+!data/cache/.gitkeep
+!data/generated/train_data.csv
 
 # Models & Embeddings (large files)
 models/
@@ -76,27 +81,27 @@ models/
 *.pkl
 *.h5
 .cache/
+huggingface/
 
 # OS
 .DS_Store
-.gitkeep
 Thumbs.db
+*.bak
 
-# Build
+# Build artifacts
 *.whl
 *.tar.gz
-dist/
-build/
-
-# IDE
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
 
 # Project specific
-monitoring/
 results/
 outputs/
 temp/
 tmp/
+profile.prof
+
+# Docker
+*.tar
+
+# Prometheus/Grafana data (keep configs)
+prometheus_data/
+grafana_data/
